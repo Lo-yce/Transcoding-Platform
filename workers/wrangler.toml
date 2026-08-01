@@ -6,3 +6,9 @@ compatibility_flags = ["nodejs_compat"]
 [[kv_namespaces]]
 binding = "STATS"
 id = "90e7e8938f3e4c1da71a15f667a46ba3"
+preview_id = "90e7e8938f3e4c1da71a15f667a46ba3"
+
+[vars]
+# 允许上报的 Origin 白名单（CORS），逗号分隔
+# 填你的 GitHub Pages 域名 + 本地开发地址
+ALLOWED_ORIGINS = "https://lo-yce.github.io,http://localhost:8000,http://127.0.0.1:8000"
