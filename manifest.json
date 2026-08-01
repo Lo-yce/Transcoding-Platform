@@ -1,0 +1,32 @@
+{
+  "name": "卡密转码工具",
+  "short_name": "卡密转码",
+  "description": "纯前端批量卡密转码工具，将饮料瓶盖卡密转换为二维码或活动链接，数据本地处理零外传。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#00A859",
+  "theme_color": "#00A859",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

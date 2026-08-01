@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta name="description" content="卡密转码工具运营数据看板 - 匿名聚合统计，无敏感数据。">
+  <title>运营数据看板 - 卡密转码工具</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00A859">
+  <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
+  <script>
+    // 主题防闪烁：与 index.html 同策略
+    (function () {
+      try {
+        var t = localStorage.getItem('theme') || 'auto';
+        var sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (t === 'dark' || ((t === 'auto' || !t) && sysDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    /* ===== 看板专属样式（复用 style.css 的变量与暗色模式）===== */
+    .stats-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .stats-toolbar .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+    }
+    .stats-toolbar .toolbar-left .bi {
+      color: var(--color-primary);
+    }
+    .stats-toolbar .updated-at {
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    .stats-toolbar .toolbar-right {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* 指标卡 grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--transition), transform var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--kpi-accent, var(--color-primary));
+    }
+    .kpi-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-md);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: var(--kpi-bg, var(--color-primary-light));
+      color: var(--kpi-accent, var(--color-primary));
+      margin-bottom: 10px;
+    }
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-text);
+      font-family: var(--font-mono);
+      line-height: 1.1;
+    }
+    .kpi-label {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 6px;
+    }
+
+    /* 图表网格 */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .chart-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .chart-card.full {
+      grid-column: 1 / -1;
+    }
+    .chart-card-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .chart-card-head .bi {
+      color: var(--color-primary);
+      font-size: 18px;
+    }
+    .chart-card-head h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .chart-canvas-wrap {
+      position: relative;
+      height: 280px;
+    }
+    .chart-canvas-wrap.tall {
+      height: 320px;
+    }
+
+    /* 状态：加载/错误/空 */
+    .stats-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--color-text-muted);
+    }
+    .stats-state .bi {
+      font-size: 42px;
+      color: var(--color-text-muted);
+      opacity: 0.5;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .stats-state.error .bi { color: var(--color-danger); opacity: 1; }
+    .stats-state h3 {
+      font-size: 16px;
+      color: var(--color-text);
+      margin-bottom: 6px;
+    }
+    .stats-state p { font-size: 13px; }
+    .stats-state .btn { margin-top: 14px; }
+
+    /* 排行列表（功能使用） */
+    .rank-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 13px;
+    }
+    .rank-item:last-child { border-bottom: none; }
+    .rank-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .rank-num.top1 { background: #fef3c7; color: #d97706; }
+    .rank-num.top2 { background: #e5e7eb; color: #4b5563; }
+    .rank-num.top3 { background: #fee2e2; color: #b91c1c; }
+    .rank-name {
+      flex: 1;
+      color: var(--color-text);
+      font-family: var(--font-mono);
+    }
+    .rank-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--color-bg);
+      border-radius: 4px;
+      overflow: hidden;
+      max-width: 120px;
+    }
+    .rank-bar-fill {
+      height: 100%;
+      background: var(--color-primary);
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+    .rank-count {
+      color: var(--color-text-muted);
+      font-family: var(--font-mono);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    /* 隐私说明 */
+    .privacy-note {
+      background: var(--color-primary-light);
+      border-left: 3px solid var(--color-primary);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .privacy-note .bi { color: var(--color-primary); flex-shrink: 0; }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .chart-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .kpi-value { font-size: 24px; }
+    }
+    @media (max-width: 420px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="header">
+    <div class="header-left">
+      <i class="bi bi-bar-chart-line-fill header-logo"></i>
+      <div class="header-text">
+        <h1 class="header-title">运营数据看板</h1>
+        <span class="header-subtitle">匿名聚合统计 · 无敏感数据</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <a class="icon-btn" href="index.html" aria-label="返回主页" title="返回主页">
+        <i class="bi bi-house-door"></i>
+      </a>
+      <a class="icon-btn" href="https://github.com/Lo-yce/Transcoding-Platform" target="_blank" rel="noopener noreferrer" aria-label="GitHub 仓库" title="GitHub">
+        <i class="bi bi-github"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- ===== 主区域 ===== -->
+  <main class="main">
+
+    <!-- 工具栏：更新时间 + 刷新 -->
+    <div class="stats-toolbar">
+      <div class="toolbar-left">
+        <i class="bi bi-clock-history"></i>
+        <span>数据更新于：</span>
+        <span class="updated-at" id="updatedAt">—</span>
+        <span id="sinceNote" class="hidden" style="margin-left:8px;">（统计自 <span id="sinceDate">—</span>）</span>
+      </div>
+      <div class="toolbar-right">
+        <label class="switch-inline" title="开启后每 60 秒自动刷新">
+          <input type="checkbox" id="autoRefresh" checked>
+          <span>自动刷新</span>
+        </label>
+        <button class="btn btn-secondary btn-sm" id="refreshBtn">
+          <i class="bi bi-arrow-clockwise"></i> 刷新
+        </button>
+      </div>
+    </div>
+
+    <!-- 加载/错误/空 状态 -->
+    <div class="stats-state" id="statsState">
+      <i class="bi bi-arrow-repeat"></i>
+      <h3>加载中…</h3>
+      <p>正在拉取匿名聚合数据</p>
+    </div>
+
+    <!-- 数据区（加载成功后显示） -->
+    <div id="statsContent" class="hidden">
+
+      <!-- KPI 指标卡 -->
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- 趋势图 -->
+      <div class="chart-grid">
+        <div class="chart-card full">
+          <div class="chart-card-head">
+            <i class="bi bi-graph-up-arrow"></i>
+            <h3>访问与转码趋势（近 30 天）</h3>
+          </div>
+          <div class="chart-canvas-wrap tall">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 厂商分布 -->
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <i class="bi bi-building"></i>
+            <h3>厂商转码分布</h3>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="vendorChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 设备分布 -->
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <i class="bi bi-phone"></i>
+            <h3>访问设备分布</h3>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="deviceChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 功能使用排行 -->
+        <div class="chart-card full">
+          <div class="chart-card-head">
+            <i class="bi bi-star"></i>
+            <h3>功能使用排行</h3>
+          </div>
+          <ul class="rank-list" id="featureRank"></ul>
+        </div>
+
+        <!-- 来源分布 -->
+        <div class="chart-card full">
+          <div class="chart-card-head">
+            <i class="bi bi-signpost-split"></i>
+            <h3>访问来源分布</h3>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="referrerChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 隐私说明 -->
+      <div class="privacy-note">
+        <i class="bi bi-shield-check"></i>
+        <div>
+          <strong>数据口径：</strong>以上为匿名聚合统计，仅含访问量、转码次数、厂商 ID、功能使用次数、设备类型、来源域名等聚合数字；
+          <strong>不含</strong>卡密明文、完整 URL、二维码图像、QQ 号等任何敏感信息。
+          数据由 Cloudflare Workers + KV 存储，用户可在主页设置中关闭匿名统计上报。
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== Toast ===== -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ===== 依赖库 + 看板脚本 ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="js/telemetry-config.js"></script>
+  <script src="js/stats.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "cardtool-stats",
+  "version": "1.0.0",
+  "private": true,
+  "description": "卡密转码工具匿名遥测后端（Cloudflare Workers + KV）",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

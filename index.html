@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="description" content="纯前端批量卡密转码工具，将饮料瓶盖卡密转换为二维码或活动链接，数据本地处理零外传。">
+  <title>卡密转码工具 - 纯前端安全工具</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00A859">
+  <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
+  <script>
+    // 主题防闪烁：首帧前按用户偏好/系统偏好设置 dark 类
+    (function () {
+      try {
+        var t = localStorage.getItem('theme') || 'auto';
+        var sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (t === 'dark' || ((t === 'auto' || !t) && sysDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- ===== 安全横幅（顶部滚动 Marquee）===== -->
+  <div class="safety-banner" id="safetyBanner" role="region" aria-label="安全承诺说明">
+    <div class="safety-banner-track" id="safetyBannerTrack">
+      <span class="safety-banner-text">
+        <i class="bi bi-lock-fill"></i>
+        安全承诺：本工具仅上报匿名使用统计（访问量/转码次数/功能使用），不含卡密、URL、二维码等敏感数据，可在设置中关闭。
+      </span>
+      <span class="safety-banner-text" aria-hidden="true">
+        <i class="bi bi-lock-fill"></i>
+        安全承诺：本工具仅上报匿名使用统计（访问量/转码次数/功能使用），不含卡密、URL、二维码等敏感数据，可在设置中关闭。
+      </span>
+    </div>
+    <button class="safety-banner-close" id="safetyBannerClose" aria-label="关闭安全横幅" title="关闭横幅">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <!-- ===== Header ===== -->
+  <header class="header">
+    <div class="header-left">
+      <i class="bi bi-cup-straw header-logo"></i>
+      <div class="header-text">
+        <h1 class="header-title">卡密转码工具</h1>
+        <span class="header-subtitle">纯前端 · 本地处理 · 零数据外传</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <a class="icon-btn" href="stats.html" aria-label="运营数据看板" title="运营数据看板">
+        <i class="bi bi-bar-chart-line"></i>
+      </a>
+      <button class="icon-btn" id="settingsBtn" aria-label="打开设置" title="设置">
+        <i class="bi bi-gear"></i>
+      </button>
+      <button class="icon-btn" id="qqBtn" aria-label="联系客服" title="联系客服">
+        <i class="bi bi-headset"></i>
+      </button>
+      <a class="icon-btn" href="https://github.com/Lo-yce/Transcoding-Platform" target="_blank" rel="noopener noreferrer" aria-label="GitHub 仓库" title="GitHub">
+        <i class="bi bi-github"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- ===== 主操作区 ===== -->
+  <main class="main">
+
+    <div class="control-grid">
+
+      <!-- 厂商选择卡片 -->
+      <section class="card vendor-card">
+        <div class="card-header">
+          <i class="bi bi-building"></i>
+          <h2>厂商选择</h2>
+        </div>
+        <div class="card-body">
+          <select id="vendorSelect" class="form-select" aria-label="选择厂商"></select>
+          <button class="btn btn-secondary btn-sm btn-block" id="addVendorBtn">
+            <i class="bi bi-plus-lg"></i> 添加自定义厂商
+          </button>
+          <div class="vendor-info" id="vendorInfo"></div>
+        </div>
+      </section>
+
+      <!-- 二维码配置卡片 -->
+      <section class="card config-card">
+        <div class="card-header">
+          <i class="bi bi-sliders"></i>
+          <h2>二维码配置</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <label for="qrSize">尺寸</label>
+            <select id="qrSize" class="form-select">
+              <option value="128">128 px</option>
+              <option value="256" selected>256 px</option>
+              <option value="512">512 px</option>
+              <option value="custom">自定义</option>
+            </select>
+            <input type="number" id="qrSizeCustom" class="form-input hidden" placeholder="64-1024" min="64" max="1024">
+          </div>
+          <div class="form-row">
+            <label for="qrLevel">容错率</label>
+            <select id="qrLevel" class="form-select">
+              <option value="L">L (7%)</option>
+              <option value="M" selected>M (15%)</option>
+              <option value="Q">Q (25%)</option>
+              <option value="H">H (30%)</option>
+            </select>
+          </div>
+          <div class="form-row form-row-color">
+            <div class="color-group">
+              <label for="qrColorDark">前景色</label>
+              <input type="color" id="qrColorDark" class="form-color" value="#000000">
+            </div>
+            <div class="color-group">
+              <label for="qrColorLight">背景色</label>
+              <input type="color" id="qrColorLight" class="form-color" value="#ffffff">
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="qrMargin">外边距</label>
+            <input type="range" id="qrMargin" class="form-range" min="1" max="10" value="4">
+            <span class="range-value" id="qrMarginValue">4</span>
+          </div>
+          <div class="form-row">
+            <label for="qrContent">编码内容</label>
+            <select id="qrContent" class="form-select">
+              <option value="url" selected>完整 URL</option>
+              <option value="code">仅卡密</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="qrLogo">厂商Logo</label>
+            <label class="switch-inline">
+              <input type="checkbox" id="qrLogo">
+              <span>嵌入厂商图标</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 卡密输入卡片 -->
+      <section class="card input-card">
+        <div class="card-header">
+          <i class="bi bi-key"></i>
+          <h2>卡密输入</h2>
+        </div>
+        <div class="card-body">
+          <div class="input-tabs">
+            <button class="tab-btn active" data-tab="paste">
+              <i class="bi bi-clipboard"></i> 批量粘贴
+            </button>
+            <button class="tab-btn" data-tab="upload">
+              <i class="bi bi-upload"></i> 文件上传
+            </button>
+            <button class="tab-btn" data-tab="manual">
+              <i class="bi bi-pencil"></i> 手动添加
+            </button>
+          </div>
+
+          <div class="tab-content" id="tab-paste">
+            <textarea id="pasteInput" class="form-textarea" rows="4"
+              placeholder="每行一个卡密，也支持逗号/空格分隔" autocomplete="off"></textarea>
+            <button class="btn btn-primary btn-block" id="parsePasteBtn">
+              <i class="bi bi-check2-circle"></i> 解析并添加
+            </button>
+          </div>
+
+          <div class="tab-content hidden" id="tab-upload">
+            <label class="file-drop" for="fileInput">
+              <i class="bi bi-cloud-arrow-up"></i>
+              <span>点击选择或拖入文件</span>
+              <input type="file" id="fileInput" class="form-file" accept=".txt,.csv,.xlsx,.xls" hidden>
+            </label>
+            <p class="file-hint">支持 .txt / .csv / .xlsx（首列为卡密），≤ 5MB</p>
+            <button class="btn btn-primary btn-block" id="parseFileBtn">
+              <i class="bi bi-check2-circle"></i> 解析并添加
+            </button>
+          </div>
+
+          <div class="tab-content hidden" id="tab-manual">
+            <div class="manual-input-row">
+              <input type="password" id="manualInput" class="form-input"
+                placeholder="输入单个卡密后回车" autocomplete="off">
+              <button class="btn btn-primary" id="addManualBtn" aria-label="添加">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+            <p class="file-hint">卡密以圆点显示，失焦或刷新自动清空</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 待处理列表预览 -->
+    <div class="pending-list hidden" id="pendingListWrap">
+      <div class="pending-header">
+        <span><i class="bi bi-list-ul"></i> 待转码卡密 (<strong id="pendingCount">0</strong>)</span>
+        <button class="btn btn-text btn-sm" id="clearPendingBtn">
+          <i class="bi bi-x-circle"></i> 清空待处理
+        </button>
+      </div>
+      <div class="pending-chips" id="pendingChips"></div>
+    </div>
+
+    <!-- 统计栏 + 操作 -->
+    <div class="action-bar">
+      <div class="stats">
+        <span class="stat-item">共 <strong id="statTotal">0</strong></span>
+        <span class="stat-item stat-valid"><i class="bi bi-check-circle"></i> 有效 <strong id="statValid">0</strong></span>
+        <span class="stat-item stat-invalid"><i class="bi bi-x-circle"></i> 无效 <strong id="statInvalid">0</strong></span>
+        <span class="stat-item stat-dup"><i class="bi bi-files"></i> 重复 <strong id="statDup">0</strong></span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="transcodeBtn">
+          <i class="bi bi-lightning-charge"></i> 开始转码
+        </button>
+        <button class="btn btn-secondary" id="previewBtn">
+          <i class="bi bi-eye"></i> 预览首条
+        </button>
+        <button class="btn btn-secondary" id="clearBtn">
+          <i class="bi bi-trash"></i> 清空结果
+        </button>
+        <button class="btn btn-secondary" id="exportCsvBtn" disabled>
+          <i class="bi bi-filetype-csv"></i> 导出 CSV
+        </button>
+        <button class="btn btn-secondary" id="exportZipBtn" disabled>
+          <i class="bi bi-file-zip"></i> 打包 ZIP
+        </button>
+        <button class="btn btn-secondary" id="printBtn" disabled>
+          <i class="bi bi-printer"></i> 打印
+        </button>
+      </div>
+    </div>
+
+    <!-- 结果工具栏：筛选 / 搜索 / 批量已扫 -->
+    <div class="result-toolbar hidden" id="resultToolbar">
+      <div class="filter-group" role="group" aria-label="按状态筛选">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="valid">有效</button>
+        <button class="filter-btn" data-filter="invalid">无效</button>
+        <button class="filter-btn" data-filter="duplicate">重复</button>
+      </div>
+      <input type="text" id="resultSearch" class="form-input result-search"
+        placeholder="搜索卡密..." autocomplete="off">
+      <div class="batch-actions">
+        <button class="btn btn-secondary btn-sm" id="scanCheckBtn" title="用摄像头扫描验证二维码可读">
+          <i class="bi bi-qr-code-scan"></i> 扫码自检
+        </button>
+        <button class="btn btn-secondary btn-sm" id="markAllScannedBtn" title="将所有二维码标记为已扫">
+          <i class="bi bi-check2-all"></i> 全部已扫
+        </button>
+        <button class="btn btn-secondary btn-sm" id="clearAllScannedBtn" title="清除所有已扫标记">
+          <i class="bi bi-arrow-counterclockwise"></i> 清除已扫
+        </button>
+      </div>
+    </div>
+
+    <!-- 空状态 -->
+    <div class="empty-state" id="emptyState">
+      <i class="bi bi-qr-code"></i>
+      <p>尚未生成任何二维码</p>
+      <span>选择厂商 → 输入卡密 → 点击「开始转码」</span>
+    </div>
+
+    <!-- 结果网格 -->
+    <div class="result-grid hidden" id="resultGrid"></div>
+
+  </main>
+
+  <!-- ===== 添加厂商 Modal ===== -->
+  <div class="modal hidden" id="vendorModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="bi bi-building-add"></i> 添加自定义厂商</h3>
+        <button class="icon-btn" id="vendorModalClose" aria-label="关闭"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-assist">
+          <div class="ai-assist-title">
+            <i class="bi bi-robot"></i>
+            <span>AI 辅助填写</span>
+          </div>
+          <input type="text" id="aiSampleInput" class="form-input"
+            placeholder="粘贴一条卡密或完整活动链接作为示例" autocomplete="off">
+          <div class="ai-assist-actions">
+            <button class="btn btn-info btn-sm btn-block" id="copyAiPromptBtn">
+              <i class="bi bi-clipboard"></i> 复制 AI 提示词
+            </button>
+            <p class="file-hint">复制后粘贴给 AI，AI 返回的规则填入下方各字段</p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>厂商名称 *</label>
+          <input type="text" id="vName" class="form-input" placeholder="如：可口可乐" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>URL 模板 * <small>用 <code>{卡密}</code> 作占位符</small></label>
+          <input type="text" id="vUrl" class="form-input" placeholder="https://example.com/{卡密}" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>卡密正则 *</label>
+          <input type="text" id="vRegex" class="form-input" placeholder="^[A-Z0-9]{12}$" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>卡密长度</label>
+          <input type="number" id="vLen" class="form-input" placeholder="12" min="1" max="100">
+        </div>
+        <div class="form-group">
+          <label>Bootstrap 图标名</label>
+          <input type="text" id="vIcon" class="form-input" placeholder="cup-straw" value="cup-straw" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>主题色</label>
+          <input type="color" id="vColor" class="form-color" value="#00A859">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="vendorModalCancel">取消</button>
+        <button class="btn btn-primary" id="vendorModalSave">保存厂商</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 设置 Modal ===== -->
+  <div class="modal hidden" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="bi bi-gear"></i> 设置</h3>
+        <button class="icon-btn" id="settingsModalClose" aria-label="关闭"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item">
+          <div class="setting-label"><i class="bi bi-palette"></i> 主题模式</div>
+          <div class="seg-group" id="themeSegGroup" role="group" aria-label="主题模式">
+            <button type="button" class="seg-btn" data-theme="light"><i class="bi bi-sun"></i> 浅色</button>
+            <button type="button" class="seg-btn" data-theme="dark"><i class="bi bi-moon-stars"></i> 深色</button>
+            <button type="button" class="seg-btn" data-theme="auto"><i class="bi bi-circle-half"></i> 跟随系统</button>
+          </div>
+        </div>
+        <div class="setting-item">
+          <label class="switch-label">
+            <input type="checkbox" id="settingShowBanner">
+            <span class="switch-text">
+              <i class="bi bi-megaphone"></i> 显示安全横幅
+            </span>
+          </label>
+          <p class="setting-desc">关闭后刷新页面也不再显示安全横幅，可随时在此重新打开。</p>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label"><i class="bi bi-printer"></i> 打印每行列数</div>
+          <select id="printColsSelect" class="form-select">
+            <option value="3">3 列（大图）</option>
+            <option value="4">4 列（默认）</option>
+            <option value="6">6 列（小图）</option>
+          </select>
+          <p class="setting-desc">打印贴纸时每行排列的二维码数量，影响单张大小。</p>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label"><i class="bi bi-database"></i> 厂商规则备份</div>
+          <div class="setting-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="exportVendorsBtn">
+              <i class="bi bi-download"></i> 导出规则
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="importVendorsBtn">
+              <i class="bi bi-upload"></i> 导入规则
+            </button>
+            <input type="file" id="importVendorsFile" accept=".json,application/json" hidden>
+          </div>
+          <p class="setting-desc">备份自定义厂商到 JSON 文件，换设备时可导入恢复。</p>
+        </div>
+        <div class="setting-item">
+          <label class="switch-label">
+            <input type="checkbox" id="settingTelemetry" checked>
+            <span class="switch-text">
+              <i class="bi bi-graph-up"></i> 匿名使用统计
+            </span>
+          </label>
+          <p class="setting-desc">仅上报访问量/转码次数/功能使用等匿名聚合数据，不含卡密、URL、二维码等敏感信息。关闭后不再上报。</p>
+        </div>
+        <div class="setting-info">
+          <p><i class="bi bi-shield-check"></i> 卡密在浏览器本地处理</p>
+          <p><i class="bi bi-database-slash"></i> 卡密绝不上传服务器</p>
+          <p><i class="bi bi-graph-up"></i> 仅上报匿名使用统计</p>
+          <p><i class="bi bi-trash3"></i> 关闭页面即清除卡密</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="settingsModalDone">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QQ 联系弹窗 ===== -->
+  <div class="modal hidden" id="qqModal">
+    <div class="modal-content qq-modal-content">
+      <div class="modal-header">
+        <h3 id="qqModalTitle"><i class="bi bi-headset"></i> 联系我</h3>
+        <button class="icon-btn" id="qqModalClose" aria-label="关闭"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body qq-body">
+        <div class="qq-img-wrap" id="qqImgWrap">
+          <img id="qqImg" src="" alt="QQ 二维码">
+          <div class="qq-img-placeholder hidden" id="qqImgPlaceholder">
+            <i class="bi bi-image"></i>
+            <span>请放入二维码图片</span>
+            <small>assets/qq/qq-qrcode.jpg</small>
+          </div>
+        </div>
+        <p class="qq-note" id="qqNoteText">扫码加我 QQ 好友</p>
+        <div class="qq-number-box">
+          <span class="qq-label">QQ 号</span>
+          <strong class="qq-number" id="qqNumberText">—</strong>
+          <button class="btn btn-text btn-sm" id="copyQqBtn" title="复制 QQ 号">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </div>
+        <p class="qq-sub-note" id="qqSubNoteText">或手动复制 QQ 号添加</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 扫码自检 Modal ===== -->
+  <div class="modal hidden" id="scanModal">
+    <div class="modal-content scan-modal-content">
+      <div class="modal-header">
+        <h3><i class="bi bi-qr-code-scan"></i> 扫码自检</h3>
+        <button class="icon-btn" id="scanModalClose" aria-label="关闭"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="scan-hint">用摄像头对准任意二维码（屏幕上的或纸质的），自动解码并显示内容，用于验证可扫性。</p>
+        <div class="scan-video-wrap" id="scanVideoWrap">
+          <video id="scanVideo" autoplay playsinline muted></video>
+          <div class="scan-overlay-frame"></div>
+          <div class="scan-status" id="scanStatus">
+            <i class="bi bi-camera-video"></i> <span>点击开始扫描</span>
+          </div>
+        </div>
+        <div class="scan-result hidden" id="scanResultBox">
+          <div class="scan-result-label"><i class="bi bi-check2-circle"></i> 解码结果</div>
+          <div class="scan-result-text" id="scanResultText"></div>
+          <button class="btn btn-text btn-sm" id="scanResultCopy" title="复制结果">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </div>
+        <div class="scan-actions">
+          <button class="btn btn-primary btn-sm" id="scanStartBtn">
+            <i class="bi bi-play-fill"></i> 开始扫描
+          </button>
+          <button class="btn btn-secondary btn-sm" id="scanStopBtn" disabled>
+            <i class="bi bi-stop-fill"></i> 停止
+          </button>
+        </div>
+        <p class="scan-unsupported hidden" id="scanUnsupported">
+          <i class="bi bi-exclamation-triangle"></i> 当前浏览器不支持摄像头扫描，请使用 Chrome/Edge/手机浏览器，并允许摄像头权限。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Toast ===== -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ===== 依赖库 + 业务脚本 ===== -->
+  <script src="assets/lib/qrcode.min.js"></script>
+  <script src="assets/lib/jszip.min.js"></script>
+  <script src="assets/lib/jsQR.js"></script>
+  <script src="assets/lib/xlsx.full.min.js"></script>
+  <script src="assets/qq/qq-config.js"></script>
+  <script src="js/vendor.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/transcode.js"></script>
+  <script src="js/qrcode-gen.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/telemetry-config.js"></script>
+  <script src="js/telemetry.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // 注册 Service Worker（PWA 离线），需 http(s) 环境
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>

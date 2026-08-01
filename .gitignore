@@ -1,0 +1,30 @@
+# ===== 依赖 =====
+node_modules/
+workers/node_modules/
+
+# ===== Cloudflare Wrangler 本地状态 / 密钥 =====
+.wrangler/
+workers/.wrangler/
+.dev.vars
+workers/.dev.vars
+
+# ===== 日志 =====
+*.log
+
+# ===== 操作系统 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 编辑器 / IDE =====
+.vscode/
+.idea/
+.trae/
+
+# ===== 临时文件 =====
+*.tmp
+*.bak
+*.swp
+
+# ===== 参考卡密样本（含真实卡密，严禁上传公开仓库）=====
+chankaoURL/

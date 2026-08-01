@@ -1,0 +1,23 @@
+# Cloudflare Workers 配置 - 卡密转码工具匿名遥测后端
+# 部署步骤：
+# 1. 创建 KV 命名空间：npx wrangler kv:namespace create STATS  （记下 id 填到下方）
+# 2. 注入 admin token：npx wrangler secret put ADMIN_TOKEN  （输入一个随机字符串）
+# 3. 部署：npx wrangler deploy
+# 4. 把返回的 Worker 域名填到前端 js/telemetry-config.js 的 endpoint
+
+name = "cardtool-stats"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+# KV 命名空间绑定（创建后把 id 填到下方，preview_id 用于 wrangler dev）
+[[kv_namespaces]]
+binding = "STATS"
+id = "在此填入生产 KV 命名空间 id"
+preview_id = "在此填入本地开发 KV 命名空间 id"
+
+# 允许上报的 Origin 白名单（CORS），逗号分隔
+# 部署后把 Pages 域名加进来，本地调试保留 localhost
+[vars]
+ALLOWED_ORIGINS = "http://localhost:8000,http://127.0.0.1:8000"
+
+# ADMIN_TOKEN 用 wrangler secret put ADMIN_TOKEN 注入，不写在这里
