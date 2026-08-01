@@ -4,10 +4,8 @@
    迁移到自建服务器时只需改 endpoint 一行
    ========================================================= */
 window.TELEMETRY_CONFIG = {
-  // 上报端点：本地开发用 wrangler dev 默认端口 8787
-  // 部署后改为 Cloudflare Worker 域名，如：
-  // 'https://cardtool-stats.<你的子域>.workers.dev/api/track'
-  endpoint: 'http://localhost:8787/api/track',
+  // 上报端点：已部署到 Cloudflare Workers
+  endpoint: 'https://cardtool-stats.loyce.workers.dev/api/track',
 
   // 总开关：部署后置 true，调试时可临时关闭
   enabled: true,
