@@ -114,22 +114,21 @@ window.TelemetryModule = (function () {
     } catch (e) {}
   }
 
-  // 批量上报：fetch keepalive 为主通道（支持 CORS 预检）
-  // sendBeacon 发送 application/json 时不做 CORS 预检，会被浏览器直接阻止
-  // fetch keepalive 同样能在页面卸载时发出请求，且支持 CORS 预检
+  // 批量上报：fetch 为主通道（支持 CORS 预检）
+  // 不用 keepalive: true —— 该参数会导致浏览器对 CORS 请求施加额外限制
+  // 不用 sendBeacon —— 发送 application/json 时不做 CORS 预检，会被浏览器直接阻止
   function flush() {
     try {
       if (!isEnabled() || !queue.length) return;
       var c = getConfig();
       var payload = JSON.stringify({ events: queue });
 
-      // 主通道：fetch keepalive（支持 CORS 预检，页面卸载也能发出）
+      // 主通道：fetch（支持 CORS 预检）
       try {
         fetch(c.endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: payload,
-          keepalive: true,
           mode: 'cors'
         }).catch(function () {});
       } catch (e) {}
