@@ -114,35 +114,25 @@ window.TelemetryModule = (function () {
     } catch (e) {}
   }
 
-  // 批量上报：优先 sendBeacon，回退 fetch keepalive
+  // 批量上报：fetch keepalive 为主通道（支持 CORS 预检）
+  // sendBeacon 发送 application/json 时不做 CORS 预检，会被浏览器直接阻止
+  // fetch keepalive 同样能在页面卸载时发出请求，且支持 CORS 预检
   function flush() {
     try {
       if (!isEnabled() || !queue.length) return;
       var c = getConfig();
       var payload = JSON.stringify({ events: queue });
-      var sent = false;
 
-      // 通道 1：sendBeacon（页面卸载也能发出）
-      if (navigator.sendBeacon) {
-        try {
-          var blob = new Blob([payload], { type: 'application/json' });
-          sent = navigator.sendBeacon(c.endpoint, blob);
-        } catch (e) { sent = false; }
-      }
-
-      // 通道 2：fetch keepalive（sendBeacon 不可用或失败时）
-      if (!sent) {
-        try {
-          fetch(c.endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: payload,
-            keepalive: true,
-            mode: 'cors'
-          }).catch(function () {});
-          sent = true;
-        } catch (e) {}
-      }
+      // 主通道：fetch keepalive（支持 CORS 预检，页面卸载也能发出）
+      try {
+        fetch(c.endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+          mode: 'cors'
+        }).catch(function () {});
+      } catch (e) {}
 
       // 无论是否成功都清空队列，避免内存堆积（遥测失败不重试）
       queue = [];
