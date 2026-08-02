@@ -34,9 +34,9 @@ window.VendorModule = (function () {
     {
       id: 'dongpeng',
       name: '东鹏特饮',
-      urlTemplate: 'http://x.5dp.top/{卡密}',
-      regex: '^[A-Za-z0-9]{12}$',
-      length: 12,
+      urlTemplate: 'http://z.5dp.top/{卡密}',
+      regex: '^[A-Za-z0-9]{11}$',
+      length: 11,
       icon: 'battery-charging',
       color: '#0066CC',
       builtin: true
@@ -44,9 +44,9 @@ window.VendorModule = (function () {
     {
       id: 'dongpeng-active',
       name: '东鹏激活码',
-      urlTemplate: 'http://z.5dp.top/{卡密}',
-      regex: '^[A-Za-z0-9]{12}$',
-      length: 12,
+      urlTemplate: 'http://x.5dp.top/{卡密}',
+      regex: '^[A-Za-z0-9]{11}$',
+      length: 11,
       icon: 'lightning-charge',
       color: '#1E90FF',
       builtin: true
@@ -55,8 +55,8 @@ window.VendorModule = (function () {
       id: 'bushuila',
       name: '补水啦',
       urlTemplate: 'http://y.5dp.top/{卡密}',
-      regex: '^[A-Za-z0-9]{12}$',
-      length: 12,
+      regex: '^[A-Za-z0-9]{11}$',
+      length: 11,
       icon: 'droplet',
       color: '#00BFFF',
       builtin: true
@@ -65,8 +65,8 @@ window.VendorModule = (function () {
       id: 'bushuila-active',
       name: '补水啦激活码',
       urlTemplate: 'http://x.5dp.top/{卡密}',
-      regex: '^[A-Za-z0-9]{12}$',
-      length: 12,
+      regex: '^[A-Za-z0-9]{11}$',
+      length: 11,
       icon: 'droplet-half',
       color: '#87CEEB',
       builtin: true

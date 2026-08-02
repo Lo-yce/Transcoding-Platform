@@ -82,37 +82,37 @@
 
 东鹏特饮:
   名称: 东鹏特饮
-  URL模板: http://x.5dp.top/{卡密}
-  卡密长度: 12
+  URL模板: http://z.5dp.top/{卡密}
+  卡密长度: 11
   字符集: [A-Za-z0-9]
-  正则: ^[A-Za-z0-9]{12}$
+  正则: ^[A-Za-z0-9]{11}$
   图标: bootstrap-icon (battery-charging)
   颜色: #0066CC (东鹏蓝)
 
 东鹏激活码:
   名称: 东鹏激活码
-  URL模板: http://z.5dp.top/{卡密}
-  卡密长度: 12
+  URL模板: http://x.5dp.top/{卡密}
+  卡密长度: 11
   字符集: [A-Za-z0-9]
-  正则: ^[A-Za-z0-9]{12}$
+  正则: ^[A-Za-z0-9]{11}$
   图标: bootstrap-icon (lightning-charge)
   颜色: #1E90FF (东鹏激活蓝)
 
 补水啦:
   名称: 补水啦
   URL模板: http://y.5dp.top/{卡密}
-  卡密长度: 12
+  卡密长度: 11
   字符集: [A-Za-z0-9]
-  正则: ^[A-Za-z0-9]{12}$
+  正则: ^[A-Za-z0-9]{11}$
   图标: bootstrap-icon (droplet)
   颜色: #00BFFF (补水啦蓝)
 
 补水啦激活码:
   名称: 补水啦激活码
   URL模板: http://x.5dp.top/{卡密}
-  卡密长度: 12
+  卡密长度: 11
   字符集: [A-Za-z0-9]
-  正则: ^[A-Za-z0-9]{12}$
+  正则: ^[A-Za-z0-9]{11}$
   图标: bootstrap-icon (droplet-half)
   颜色: #87CEEB (补水啦激活蓝)
 
