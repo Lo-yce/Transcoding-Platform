@@ -537,20 +537,21 @@
     function resetFileDrop() {
       if (fileDrop) {
         fileDrop.classList.remove('has-file');
-        // 恢复初始内容，但保留 hidden 的 fileInput
+        // 先取走 fileInput 再替换 innerHTML，避免销毁 input 元素
+        var input = fileInput;
+        if (input && input.parentNode === fileDrop) fileDrop.removeChild(input);
         fileDrop.innerHTML =
           '<i class="bi bi-cloud-arrow-up"></i>' +
-          '<span>点击选择或拖入文件</span>' +
-          '<input type="file" id="fileInput" class="form-file" accept=".txt,.csv,.xlsx,.xls" hidden>';
-        // 重新获取 fileInput 引用并绑定 change
-        fileInput = document.getElementById('fileInput');
-        if (fileInput) {
-          fileInput.addEventListener('change', fileInputChangeHandler);
+          '<span>点击选择或拖入文件</span>';
+        // 重新清空 input 的 value 并放回
+        if (input) {
+          try { input.value = ''; } catch (e) {}
+          fileDrop.appendChild(input);
         }
       }
     }
 
-    // fileInput change 事件处理（提取为命名函数，便于 resetFileDrop 后重新绑定）
+    // fileInput change 事件处理
     function fileInputChangeHandler() {
       if (!fileInput || !fileInput.files || !fileInput.files.length) return;
       var file = fileInput.files[0];
@@ -559,17 +560,15 @@
       var sizeStr = size < 1024 ? size + 'B' : (size < 1024 * 1024 ? (size / 1024).toFixed(1) + 'KB' : (size / 1024 / 1024).toFixed(1) + 'MB');
       if (fileDrop) {
         fileDrop.classList.add('has-file');
-        // 保留 hidden 的 fileInput，只替换可见内容
+        // 先取走 fileInput 再替换 innerHTML，保留用户已选的文件
+        var input = fileInput;
+        if (input && input.parentNode === fileDrop) fileDrop.removeChild(input);
         fileDrop.innerHTML =
           '<i class="bi bi-file-earmark-check"></i>' +
           '<span class="file-name"><i class="bi bi-paperclip"></i>' + name + ' (' + sizeStr + ')</span>' +
-          '<span style="font-size:12px;opacity:0.7">点击「解析并添加」或重新选择文件</span>' +
-          '<input type="file" id="fileInput" class="form-file" accept=".txt,.csv,.xlsx,.xls" hidden>';
-        // 重新获取 fileInput 引用并绑定 change（innerHTML 替换后旧 input 已被移除）
-        fileInput = document.getElementById('fileInput');
-        if (fileInput) {
-          fileInput.addEventListener('change', fileInputChangeHandler);
-        }
+          '<span style="font-size:12px;opacity:0.7">点击「解析并添加」或重新选择文件</span>';
+        // 放回同一个 input（保留了用户选的文件）
+        if (input) fileDrop.appendChild(input);
       }
     }
 
