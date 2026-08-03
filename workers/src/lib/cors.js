@@ -28,11 +28,14 @@ export function handleOptions(req, env) {
 }
 
 export function json(data, req, env, status) {
+  var headers = Object.assign(
+    { 'Content-Type': 'application/json; charset=utf-8' },
+    corsHeaders(req, env)
+  );
+  // 防止浏览器/边缘缓存 API 响应，确保看板拿到最新数据
+  headers['Cache-Control'] = 'no-store';
   return new Response(JSON.stringify(data), {
     status: status || 200,
-    headers: Object.assign(
-      { 'Content-Type': 'application/json; charset=utf-8' },
-      corsHeaders(req, env)
-    )
+    headers: headers
   });
 }

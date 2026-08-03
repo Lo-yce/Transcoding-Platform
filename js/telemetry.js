@@ -1,8 +1,9 @@
 /* =========================================================
    telemetry.js - 匿名遥测模块
    - 事件白名单过滤（前端第一道，Worker 端二次过滤）
-   - sendBeacon + fetch keepalive 双通道上报
+   - fetch 为主通道 + sendBeacon 为卸载通道
    - 批量队列 + 定时/卸载 flush
+   - 低频高价值事件（转码）立即 flush
    - opt-out / DoNotTrack / 采样
    挂 window.TelemetryModule，与现有 vendor.js 等同模式
    隐私边界：绝不收集卡密明文/URL/二维码等敏感数据
@@ -23,6 +24,9 @@ window.TelemetryModule = (function () {
     'code', 'codes', 'url', 'dataURL', 'regex', 'urlTemplate',
     'qq', 'phone', 'email', 'token', 'password', 'cookie', 'ip'
   ];
+
+  // 低频高价值事件：入队后立即 flush，不等定时器
+  var IMMEDIATE_FLUSH_EVENTS = { transcode: true };
 
   var cfg = null;
   var queue = [];
@@ -83,7 +87,14 @@ window.TelemetryModule = (function () {
       var clean = sanitizeProps(event, props);
       if (clean === null) return; // 未知事件类型
       queue.push({ event: event, ts: Date.now(), props: clean });
-      if (queue.length >= c.batchSize) flush();
+      // 队列满立即 flush
+      if (queue.length >= c.batchSize) {
+        flush();
+      } else if (IMMEDIATE_FLUSH_EVENTS[event]) {
+        // 低频高价值事件（如转码）：立即 flush，不等 5 秒定时器
+        // 避免"转完即走"时事件丢失
+        flush();
+      }
     } catch (e) { /* 静默，绝不影响主流程 */ }
   }
 
@@ -114,24 +125,49 @@ window.TelemetryModule = (function () {
     } catch (e) {}
   }
 
-  // 批量上报：fetch 为主通道（支持 CORS 预检）
-  // 不用 keepalive: true —— 该参数会导致浏览器对 CORS 请求施加额外限制
-  // 不用 sendBeacon —— 发送 application/json 时不做 CORS 预检，会被浏览器直接阻止
-  function flush() {
+  // 用 fetch 发送（主通道，支持 CORS 预检）
+  function sendFetch(payload) {
+    try {
+      var c = getConfig();
+      fetch(c.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        mode: 'cors'
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
+  // 用 sendBeacon 发送（卸载通道，页面卸载时浏览器保证发出）
+  // 用 text/plain 类型避免 CORS 预检（application/json 会触发预检，
+  // 而页面卸载时预检来不及完成）
+  function sendBeacon(payload) {
+    try {
+      var c = getConfig();
+      if (navigator.sendBeacon) {
+        var blob = new Blob([payload], { type: 'text/plain' });
+        return navigator.sendBeacon(c.endpoint, blob);
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  // 批量上报
+  function flush(useBeacon) {
     try {
       if (!isEnabled() || !queue.length) return;
-      var c = getConfig();
       var payload = JSON.stringify({ events: queue });
 
-      // 主通道：fetch（支持 CORS 预检）
-      try {
-        fetch(c.endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payload,
-          mode: 'cors'
-        }).catch(function () {});
-      } catch (e) {}
+      if (useBeacon) {
+        // 卸载时优先用 sendBeacon（浏览器保证发出）
+        // sendBeacon 失败则回退 fetch
+        if (!sendBeacon(payload)) {
+          sendFetch(payload);
+        }
+      } else {
+        // 正常情况用 fetch（支持 CORS 预检）
+        sendFetch(payload);
+      }
 
       // 无论是否成功都清空队列，避免内存堆积（遥测失败不重试）
       queue = [];
@@ -148,13 +184,13 @@ window.TelemetryModule = (function () {
       if (!isEnabled() || isOptedOut()) return;
       var c = getConfig();
 
-      // 定时 flush
-      flushTimer = setInterval(flush, c.batchInterval);
+      // 定时 flush（正常通道）
+      flushTimer = setInterval(function () { flush(false); }, c.batchInterval);
 
-      // 页面卸载前最后一搏
-      window.addEventListener('pagehide', flush);
+      // 页面卸载前最后一搏（用 sendBeacon 保证发出）
+      window.addEventListener('pagehide', function () { flush(true); });
       document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') flush();
+        if (document.visibilityState === 'hidden') flush(true);
       });
 
       // 触发 pageview 事件

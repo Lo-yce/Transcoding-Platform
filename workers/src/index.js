@@ -19,35 +19,42 @@ export default {
     // OPTIONS 预检
     if (request.method === 'OPTIONS') return handleOptions(request, env);
 
-    // 健康检查
-    if (path === '/api/health' && request.method === 'GET') {
-      return json({
-        ok: true,
-        service: 'cardtool-stats',
-        time: new Date().toISOString()
-      }, request, env, 200);
-    }
+    // 全局 try/catch：任何 handler 内部异常都返回 500 而非裸异常
+    // 避免 Cloudflare 控制台计入错误计数
+    try {
+      // 健康检查
+      if (path === '/api/health' && request.method === 'GET') {
+        return json({
+          ok: true,
+          service: 'cardtool-stats',
+          time: new Date().toISOString()
+        }, request, env, 200);
+      }
 
-    // POST /api/track —— 匿名事件上报
-    if (path === '/api/track' && request.method === 'POST') {
-      return handleTrack(request, env);
-    }
+      // POST /api/track —— 匿名事件上报
+      if (path === '/api/track' && request.method === 'POST') {
+        return await handleTrack(request, env);
+      }
 
-    // GET /api/stats —— 全局聚合快照
-    if (path === '/api/stats' && request.method === 'GET') {
-      return handleStats(request, env);
-    }
+      // GET /api/stats —— 全局聚合快照
+      if (path === '/api/stats' && request.method === 'GET') {
+        return await handleStats(request, env);
+      }
 
-    // GET /api/stats/daily?days=7 —— 近 N 天趋势
-    if (path === '/api/stats/daily' && request.method === 'GET') {
-      return handleStatsDaily(request, env);
-    }
+      // GET /api/stats/daily?days=7 —— 近 N 天趋势
+      if (path === '/api/stats/daily' && request.method === 'GET') {
+        return await handleStatsDaily(request, env);
+      }
 
-    // POST /api/admin/rebuild —— 手动重算（鉴权）
-    if (path === '/api/admin/rebuild' && request.method === 'POST') {
-      return handleRebuild(request, env);
-    }
+      // POST /api/admin/rebuild —— 手动重算（鉴权）
+      if (path === '/api/admin/rebuild' && request.method === 'POST') {
+        return await handleRebuild(request, env);
+      }
 
-    return json({ ok: false, error: 'not_found', path: path }, request, env, 404);
+      return json({ ok: false, error: 'not_found', path: path }, request, env, 404);
+    } catch (err) {
+      console.error('[worker-error]', err && err.message, err && err.stack);
+      return json({ ok: false, error: 'internal', message: err && err.message || 'unknown' }, request, env, 500);
+    }
   }
 };

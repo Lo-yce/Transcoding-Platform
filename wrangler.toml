@@ -1,8 +1,0 @@
-﻿name = "cardtool-stats"
-main = "worker/index.js"
-compatibility_date = "2026-08-01"
-compatibility_flags = ["nodejs_compat"]
-
-[[kv_namespaces]]
-binding = "STATS"
-id = "90e7e8938f3e4c1da71a15f667a46ba3"

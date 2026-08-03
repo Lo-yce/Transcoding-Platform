@@ -31,10 +31,12 @@ export async function handleTrack(req, env) {
   var dateStr = todayStr();
   var doc = await getDaily(env, dateStr);
 
-  // 首次写入记录起始日期
-  var since = await getMeta(env, 'since');
-  if (!since) {
-    await putMeta(env, 'since', { since: dateStr, version: 1 });
+  // 首次写入记录起始日期（仅当天文档为空时才检查，减少 KV 读写）
+  if (doc.pageview === 0 && doc.transcode === 0) {
+    var since = await getMeta(env, 'since');
+    if (!since) {
+      await putMeta(env, 'since', { since: dateStr, version: 1 });
+    }
   }
 
   for (var i = 0; i < events.length; i++) {
