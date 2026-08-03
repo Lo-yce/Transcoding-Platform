@@ -526,10 +526,51 @@
         if (window.TelemetryModule) { try { TelemetryModule.trackFeature('input_file'); } catch (e) {} }
         toast('已添加 ' + added + ' 条卡密（共 ' + codes.length + ' 条）', 'success');
         InputModule.clearInputs();
+        resetFileDrop();
         renderPending();
       }).catch(function (err) {
         toast('文件解析失败：' + err.message, 'error');
       });
+    }
+
+    // 恢复文件上传区为初始状态
+    function resetFileDrop() {
+      if (fileDrop) {
+        fileDrop.classList.remove('has-file');
+        // 恢复初始内容，但保留 hidden 的 fileInput
+        fileDrop.innerHTML =
+          '<i class="bi bi-cloud-arrow-up"></i>' +
+          '<span>点击选择或拖入文件</span>' +
+          '<input type="file" id="fileInput" class="form-file" accept=".txt,.csv,.xlsx,.xls" hidden>';
+        // 重新获取 fileInput 引用并绑定 change
+        fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+          fileInput.addEventListener('change', fileInputChangeHandler);
+        }
+      }
+    }
+
+    // fileInput change 事件处理（提取为命名函数，便于 resetFileDrop 后重新绑定）
+    function fileInputChangeHandler() {
+      if (!fileInput || !fileInput.files || !fileInput.files.length) return;
+      var file = fileInput.files[0];
+      var name = file.name || '未知文件';
+      var size = file.size || 0;
+      var sizeStr = size < 1024 ? size + 'B' : (size < 1024 * 1024 ? (size / 1024).toFixed(1) + 'KB' : (size / 1024 / 1024).toFixed(1) + 'MB');
+      if (fileDrop) {
+        fileDrop.classList.add('has-file');
+        // 保留 hidden 的 fileInput，只替换可见内容
+        fileDrop.innerHTML =
+          '<i class="bi bi-file-earmark-check"></i>' +
+          '<span class="file-name"><i class="bi bi-paperclip"></i>' + name + ' (' + sizeStr + ')</span>' +
+          '<span style="font-size:12px;opacity:0.7">点击「解析并添加」或重新选择文件</span>' +
+          '<input type="file" id="fileInput" class="form-file" accept=".txt,.csv,.xlsx,.xls" hidden>';
+        // 重新获取 fileInput 引用并绑定 change（innerHTML 替换后旧 input 已被移除）
+        fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+          fileInput.addEventListener('change', fileInputChangeHandler);
+        }
+      }
     }
 
     if (parseFile) {
@@ -540,6 +581,11 @@
         }
         handleFileObj(fileInput.files[0]);
       });
+    }
+
+    // 文件选择后立即显示文件名，提示用户已选中
+    if (fileInput) {
+      fileInput.addEventListener('change', fileInputChangeHandler);
     }
 
     // 拖拽上传：文案承诺"拖入文件"，此处真正实现 drop

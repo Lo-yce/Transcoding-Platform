@@ -585,6 +585,30 @@ body {
   font-size: 13px;
 }
 
+/* 已选文件状态 */
+.file-drop.has-file {
+  border-color: var(--color-primary);
+  border-style: solid;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.file-drop.has-file .bi {
+  font-size: 24px;
+}
+
+.file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  word-break: break-all;
+}
+
+.file-name .bi {
+  font-size: 14px;
+  margin-right: 4px;
+}
+
 .file-hint {
   font-size: 12px;
   color: var(--color-text-muted);
