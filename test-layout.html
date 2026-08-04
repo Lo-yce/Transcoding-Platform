@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>按钮布局测试</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      padding: 20px;
+      background: #f0f2f5;
+    }
+
+    /* 测试工具条 */
+    .test-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      background: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .test-info {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .test-info span {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .test-info strong {
+      color: #00A859;
+      font-size: 18px;
+    }
+
+    .device-presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .device-btn {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: #f5f5f5;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .device-btn:hover {
+      background: #e6f7ef;
+      border-color: #00A859;
+      color: #00A859;
+    }
+
+    .device-btn.active {
+      background: #00A859;
+      color: #fff;
+      border-color: #00A859;
+    }
+
+    /* 预览容器 - 模拟不同屏幕宽度 */
+    .preview-container {
+      margin: 20px auto;
+      transition: width 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .preview-header {
+      background: #1f2937;
+      color: #fff;
+      padding: 8px 16px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .preview-header .dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .preview-header .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .preview-header .dot.red { background: #ff5f56; }
+    .preview-header .dot.yellow { background: #ffbd2e; }
+    .preview-header .dot.green { background: #27c93f; }
+
+    .preview-content {
+      background: #fff;
+      padding: 16px;
+      min-height: 300px;
+    }
+
+    /* 媒体查询状态显示 */
+    .breakpoint-status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .bp-desktop { background: #e3f2fd; color: #1565c0; }
+    .bp-tablet { background: #fff3e0; color: #e65100; }
+    .bp-mobile { background: #ffebee; color: #c62828; }
+
+    /* 布局分析面板 */
+    .layout-debug {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .layout-debug h3 {
+      font-size: 14px;
+      margin: 0 0 8px 0;
+      color: #333;
+    }
+
+    .layout-debug .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+      border-bottom: 1px dashed #dee2e6;
+    }
+
+    .layout-debug .row:last-child {
+      border-bottom: none;
+    }
+
+    .layout-debug .label {
+      color: #6c757d;
+    }
+
+    .layout-debug .value {
+      color: #00A859;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="test-toolbar">
+  <div class="test-info">
+    <span>预览宽度：<strong id="widthDisplay">375px</strong></span>
+    <span>设备类型：<strong id="deviceType">手机</strong></span>
+    <span>
+      <span id="breakpointLabel" class="breakpoint-status bp-mobile">移动端 (≤768px)</span>
+    </span>
+  </div>
+  <div class="device-presets">
+    <button class="device-btn" data-width="320" data-type="小屏手机">小屏 320px</button>
+    <button class="device-btn active" data-width="375" data-type="标准手机">手机 375px</button>
+    <button class="device-btn" data-width="414" data-type="大屏手机">大屏 414px</button>
+    <button class="device-btn" data-width="768" data-type="平板">平板 768px</button>
+    <button class="device-btn" data-width="1024" data-type="小屏桌面">小屏 1024px</button>
+    <button class="device-btn" data-width="1440" data-type="桌面">桌面 1440px</button>
+    <button class="device-btn" data-width="1920" data-type="大屏">大屏 1920px</button>
+  </div>
+</div>
+
+<div id="previewContainer" class="preview-container" style="width: 375px;">
+  <div class="preview-header">
+    <div class="dots">
+      <div class="dot red"></div>
+      <div class="dot yellow"></div>
+      <div class="dot green"></div>
+    </div>
+    <span id="previewURL">https://lo-yce.github.io/Transcoding-Platform/</span>
+  </div>
+  <div class="preview-content" id="previewContent">
+    <!-- 这里模拟 action-bar 的内容 -->
+    <div class="action-bar">
+      <div class="stats">
+        <span class="stat-item">共 <strong>100</strong></span>
+        <span class="stat-item stat-valid"><i class="bi bi-check-circle"></i> 有效 <strong>80</strong></span>
+        <span class="stat-item stat-invalid"><i class="bi bi-x-circle"></i> 无效 <strong>10</strong></span>
+        <span class="stat-item stat-dup"><i class="bi bi-files"></i> 重复 <strong>10</strong></span>
+      </div>
+      <div class="actions" id="actionsTest">
+        <button class="btn btn-primary"><i class="bi bi-lightning-charge"></i> 开始转码</button>
+        <button class="btn btn-secondary"><i class="bi bi-eye"></i> 预览首条</button>
+        <button class="btn btn-secondary"><i class="bi bi-trash"></i> 清空结果</button>
+        <button class="btn btn-secondary"><i class="bi bi-filetype-csv"></i> 导出 CSV</button>
+        <button class="btn btn-secondary"><i class="bi bi-file-zip"></i> 打包 ZIP</button>
+        <button class="btn btn-secondary"><i class="bi-printer"></i> 打印</button>
+      </div>
+    </div>
+
+    <div class="layout-debug">
+      <h3>🔍 布局分析</h3>
+      <div class="row">
+        <span class="label">容器宽度</span>
+        <span class="value" id="debugContainer">-</span>
+      </div>
+      <div class="row">
+        <span class="label">可用宽度（扣 padding）</span>
+        <span class="value" id="debugAvailable">-</span>
+      </div>
+      <div class="row">
+        <span class="label">按钮容器宽度</span>
+        <span class="value" id="debugActions">-</span>
+      </div>
+      <div class="row">
+        <span class="label">按钮数量</span>
+        <span class="value">6</span>
+      </div>
+      <div class="row">
+        <span class="label">每行按钮数</span>
+        <span class="value" id="debugPerRow">-</span>
+      </div>
+      <div class="row">
+        <span class="label">每个按钮宽度</span>
+        <span class="value" id="debugBtnWidth">-</span>
+      </div>
+      <div class="row">
+        <span class="label">按钮是否溢出</span>
+        <span class="value" id="debugOverflow">-</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var container = document.getElementById('previewContainer');
+  var widthDisplay = document.getElementById('widthDisplay');
+  var deviceType = document.getElementById('deviceType');
+  var breakpointLabel = document.getElementById('breakpointLabel');
+
+  var debugContainer = document.getElementById('debugContainer');
+  var debugAvailable = document.getElementById('debugAvailable');
+  var debugActions = document.getElementById('debugActions');
+  var debugPerRow = document.getElementById('debugPerRow');
+  var debugBtnWidth = document.getElementById('debugBtnWidth');
+  var debugOverflow = document.getElementById('debugOverflow');
+
+  function setWidth(width) {
+    container.style.width = width + 'px';
+    widthDisplay.textContent = width + 'px';
+
+    // 设备类型
+    var type = '桌面';
+    var bp = 'bp-desktop';
+    var bpText = '桌面端 (>768px)';
+    if (width <= 360) { type = '小屏手机'; bp = 'bp-mobile'; bpText = '移动端 (≤360px)'; }
+    else if (width <= 480) { type = '标准手机'; bp = 'bp-mobile'; bpText = '移动端 (≤480px)'; }
+    else if (width <= 768) { type = '大屏手机/平板'; bp = 'bp-mobile'; bpText = '移动端 (≤768px)'; }
+    else if (width <= 1024) { type = '小屏桌面'; bp = 'bp-tablet'; bpText = '平板/小屏桌面 (768-1024px)'; }
+    else { type = '桌面'; bp = 'bp-desktop'; bpText = '桌面端 (>1024px)'; }
+
+    deviceType.textContent = type;
+    breakpointLabel.textContent = bpText;
+    breakpointLabel.className = 'breakpoint-status ' + bp;
+
+    // 更新按钮
+    document.querySelectorAll('.device-btn').forEach(function (btn) {
+      btn.classList.toggle('active', parseInt(btn.dataset.width) === width);
+    });
+
+    // 延迟计算布局（等待 CSS transition）
+    setTimeout(updateLayoutDebug, 350);
+  }
+
+  function updateLayoutDebug() {
+    var content = document.getElementById('previewContent');
+    var actions = document.getElementById('actionsTest');
+    var btns = actions ? actions.querySelectorAll('.btn') : [];
+
+    var containerW = content ? content.clientWidth : 0;
+    var actionsW = actions ? actions.clientWidth : 0;
+    var btnWidth = btns.length > 0 ? btns[0].getBoundingClientRect().width : 0;
+    var btnRightEdge = btns.length > 0 ? btns[0].getBoundingClientRect().right : 0;
+    var actionsRightEdge = actions ? actions.getBoundingClientRect().right : 0;
+
+    // 计算每行按钮数
+    var perRow = 0;
+    var firstTop = btns.length > 0 ? btns[0].getBoundingClientRect().top : 0;
+    btns.forEach(function (btn) {
+      if (Math.abs(btn.getBoundingClientRect().top - firstTop) < 10) perRow++;
+    });
+
+    // 是否溢出
+    var overflow = btnRightEdge > actionsRightEdge + 2 || btnWidth < 40;
+
+    debugContainer.textContent = containerW + 'px';
+    debugAvailable.textContent = (containerW - 40) + 'px'; // 减去 padding
+    debugActions.textContent = actionsW + 'px';
+    debugPerRow.textContent = perRow + ' 个';
+    debugBtnWidth.textContent = btnWidth.toFixed(1) + 'px';
+    debugOverflow.textContent = overflow ? '⚠️ 可能溢出' : '✅ 正常';
+    debugOverflow.style.color = overflow ? '#dc3545' : '#00A859';
+  }
+
+  // 设备按钮事件
+  document.querySelectorAll('.device-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var w = parseInt(btn.dataset.width);
+      setWidth(w);
+    });
+  });
+
+  // 初始化
+  setWidth(375);
+
+  // 监听容器尺寸变化
+  window.addEventListener('resize', function () {
+    // 只在非按钮点击触发时更新（避免干扰）
+  });
+})();
+</script>
+
+</body>
+</html>
