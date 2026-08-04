@@ -1422,12 +1422,14 @@ body {
 
   .actions {
     justify-content: stretch;
+    flex-wrap: wrap;
   }
 
   .actions .btn {
-    flex: 1;
-    min-width: 0;
-    padding: 11px 12px;
+    flex: 1 1 calc(33.333% - 4px);
+    min-width: calc(33.333% - 4px);
+    padding: 10px 6px;
+    font-size: 12px;
   }
 
   /* 结果网格两列 */
