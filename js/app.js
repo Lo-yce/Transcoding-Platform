@@ -1381,15 +1381,32 @@
       var imgEl = $('qqImg');
       var placeholder = $('qqImgPlaceholder');
       var hint = $('qqImgHint');
+      var expectedPath = isQQ ? 'assets/qq/qq-qrcode.jpg' : 'assets/qq/wechat-qrcode.jpg';
+
       if (imgEl) {
-        if (img) {
+        // onerror 动态设置，以便根据当前模式显示正确的提示路径
+        imgEl.onerror = function () {
+          imgEl.classList.add('hidden');
+          if (placeholder) {
+            placeholder.classList.remove('hidden');
+            var hintSmall = placeholder.querySelector('small');
+            if (hintSmall) hintSmall.textContent = expectedPath;
+          }
+        };
+        imgEl.onload = function () {
           imgEl.classList.remove('hidden');
           if (placeholder) placeholder.classList.add('hidden');
+        };
+
+        if (img) {
           imgEl.src = img;
         } else {
           imgEl.classList.add('hidden');
-          if (placeholder) placeholder.classList.remove('hidden');
-          if (hint) hint.textContent = isQQ ? 'assets/qq/qq-qrcode.jpg' : 'assets/qq/wechat-qrcode.jpg';
+          if (placeholder) {
+            placeholder.classList.remove('hidden');
+            var hintSmall = placeholder.querySelector('small');
+            if (hintSmall) hintSmall.textContent = expectedPath;
+          }
         }
       }
 
@@ -1405,20 +1422,6 @@
     }
     if (switchWechat) {
       switchWechat.addEventListener('click', function () { setMode('wechat'); });
-    }
-
-    // 图片加载（失败时显示占位提示）
-    var imgEl = $('qqImg');
-    var placeholder = $('qqImgPlaceholder');
-    if (imgEl) {
-      imgEl.onerror = function () {
-        imgEl.classList.add('hidden');
-        if (placeholder) placeholder.classList.remove('hidden');
-      };
-      imgEl.onload = function () {
-        imgEl.classList.remove('hidden');
-        if (placeholder) placeholder.classList.add('hidden');
-      };
     }
 
     // 初始化显示 QQ
