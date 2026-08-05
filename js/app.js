@@ -1331,38 +1331,98 @@
 
     // 读取配置（来自 assets/qq/qq-config.js）
     var cfg = window.QQ_CONFIG || {};
-    var number = cfg.qqNumber || '';
-    var img = cfg.qqImage || '';
-    var note = cfg.qqNote || '扫码加我 QQ 好友';
-    var subNote = cfg.qqSubNote || '或手动复制 QQ 号添加';
+
+    // QQ 配置
+    var qqNumber = cfg.qqNumber || '';
+    var qqImage = cfg.qqImage || '';
+    var qqNote = cfg.qqNote || '扫码加我 QQ 好友';
+    var qqSubNote = cfg.qqSubNote || '或手动复制 QQ 号添加';
+
+    // 微信配置
+    var wechatNumber = cfg.wechatNumber || '';
+    var wechatImage = cfg.wechatImage || '';
+    var wechatNote = cfg.wechatNote || '扫码加我微信好友';
+    var wechatSubNote = cfg.wechatSubNote || '或手动复制微信号添加';
+
     var title = cfg.qqTitle || '联系我';
 
-    // 填充内容
+    // 当前模式：'qq' 或 'wechat'
+    var currentMode = 'qq';
+
+    // 填充标题
     var titleEl = $('qqModalTitle');
     if (titleEl) titleEl.innerHTML = '<i class="bi bi-headset"></i> ' + escapeHtml(title);
-    setText('qqNoteText', note);
-    setText('qqSubNoteText', subNote);
-    setText('qqNumberText', number || '—');
+
+    // 切换按钮
+    var switchQQ = $('switchQQ');
+    var switchWechat = $('switchWechat');
+
+    function setMode(mode) {
+      currentMode = mode;
+      var isQQ = mode === 'qq';
+
+      // 切换按钮状态
+      if (switchQQ) switchQQ.classList.toggle('active', isQQ);
+      if (switchWechat) switchWechat.classList.toggle('active', !isQQ);
+
+      // 更新内容
+      var number = isQQ ? qqNumber : wechatNumber;
+      var img = isQQ ? qqImage : wechatImage;
+      var note = isQQ ? qqNote : wechatNote;
+      var subNote = isQQ ? qqSubNote : wechatSubNote;
+      var label = isQQ ? 'QQ 号' : '微信号';
+
+      setText('qqLabel', label);
+      setText('qqNoteText', note);
+      setText('qqSubNoteText', subNote);
+      setText('qqNumberText', number || '—');
+
+      // 更新图片
+      var imgEl = $('qqImg');
+      var placeholder = $('qqImgPlaceholder');
+      var hint = $('qqImgHint');
+      if (imgEl) {
+        if (img) {
+          imgEl.classList.remove('hidden');
+          if (placeholder) placeholder.classList.add('hidden');
+          imgEl.src = img;
+        } else {
+          imgEl.classList.add('hidden');
+          if (placeholder) placeholder.classList.remove('hidden');
+          if (hint) hint.textContent = isQQ ? 'assets/qq/qq-qrcode.jpg' : 'assets/qq/wechat-qrcode.jpg';
+        }
+      }
+
+      // 更新复制按钮标题
+      if (copyQqBtn) {
+        copyQqBtn.title = '复制' + label;
+      }
+    }
+
+    // 切换事件
+    if (switchQQ) {
+      switchQQ.addEventListener('click', function () { setMode('qq'); });
+    }
+    if (switchWechat) {
+      switchWechat.addEventListener('click', function () { setMode('wechat'); });
+    }
 
     // 图片加载（失败时显示占位提示）
     var imgEl = $('qqImg');
     var placeholder = $('qqImgPlaceholder');
     if (imgEl) {
-      if (img) {
-        imgEl.onerror = function () {
-          imgEl.classList.add('hidden');
-          if (placeholder) placeholder.classList.remove('hidden');
-        };
-        imgEl.onload = function () {
-          imgEl.classList.remove('hidden');
-          if (placeholder) placeholder.classList.add('hidden');
-        };
-        imgEl.src = img;
-      } else {
+      imgEl.onerror = function () {
         imgEl.classList.add('hidden');
         if (placeholder) placeholder.classList.remove('hidden');
-      }
+      };
+      imgEl.onload = function () {
+        imgEl.classList.remove('hidden');
+        if (placeholder) placeholder.classList.add('hidden');
+      };
     }
+
+    // 初始化显示 QQ
+    setMode('qq');
 
     function open() { modal.classList.remove('hidden'); }
     function close() { modal.classList.add('hidden'); }
@@ -1373,12 +1433,14 @@
       if (e.target === modal) close();
     });
 
-    // 复制 QQ 号
+    // 复制号码
     if (copyQqBtn) {
       copyQqBtn.addEventListener('click', function () {
-        if (!number) { toast('未配置 QQ 号', 'warning'); return; }
+        var number = currentMode === 'qq' ? qqNumber : wechatNumber;
+        var label = currentMode === 'qq' ? 'QQ 号' : '微信号';
+        if (!number) { toast('未配置' + label, 'warning'); return; }
         copyToClipboard(number);
-        toast('QQ 号已复制', 'success');
+        toast(label + '已复制', 'success');
       });
     }
 

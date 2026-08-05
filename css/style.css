@@ -1343,6 +1343,51 @@ body {
   margin: 0;
 }
 
+/* QQ/微信切换按钮 */
+.qq-switch-group {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.qq-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 20px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+
+.qq-switch-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.qq-switch-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.qq-switch-btn.active:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.qq-switch-btn .bi {
+  font-size: 16px;
+}
+
 /* =========================================================
    响应式 - 适配 PC / 平板 / 手机 / 横屏 / 超小屏
    ========================================================= */
@@ -1612,6 +1657,25 @@ body {
 :root.dark .qq-number-box { background: rgba(255, 255, 255, 0.05); }
 :root.dark .filter-btn.active { background: var(--color-surface); }
 :root.dark .pending-chip { background: var(--color-primary-light); color: #6ee7b7; }
+
+/* QQ/微信切换按钮深色模式 */
+:root.dark .qq-switch-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:root.dark .qq-switch-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(0, 168, 89, 0.15);
+}
+
+:root.dark .qq-switch-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
 
 /* modal 遮罩加深 */
 :root.dark .modal { background: rgba(0, 0, 0, 0.7); }

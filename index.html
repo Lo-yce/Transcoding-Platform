@@ -403,7 +403,7 @@
     </div>
   </div>
 
-  <!-- ===== QQ 联系弹窗 ===== -->
+  <!-- ===== 联系弹窗（QQ / 微信切换）===== -->
   <div class="modal hidden" id="qqModal">
     <div class="modal-content qq-modal-content">
       <div class="modal-header">
@@ -411,19 +411,28 @@
         <button class="icon-btn" id="qqModalClose" aria-label="关闭"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="modal-body qq-body">
+        <!-- 切换按钮 -->
+        <div class="qq-switch-group" role="group" aria-label="切换联系方式">
+          <button type="button" class="qq-switch-btn active" data-mode="qq" id="switchQQ">
+            <i class="bi bi-chat-dots"></i> QQ
+          </button>
+          <button type="button" class="qq-switch-btn" data-mode="wechat" id="switchWechat">
+            <i class="bi bi-chat-dots-fill"></i> 微信
+          </button>
+        </div>
         <div class="qq-img-wrap" id="qqImgWrap">
-          <img id="qqImg" src="" alt="QQ 二维码">
+          <img id="qqImg" src="" alt="二维码">
           <div class="qq-img-placeholder hidden" id="qqImgPlaceholder">
             <i class="bi bi-image"></i>
             <span>请放入二维码图片</span>
-            <small>assets/qq/qq-qrcode.jpg</small>
+            <small id="qqImgHint">assets/qq/qq-qrcode.jpg</small>
           </div>
         </div>
         <p class="qq-note" id="qqNoteText">扫码加我 QQ 好友</p>
         <div class="qq-number-box">
-          <span class="qq-label">QQ 号</span>
+          <span class="qq-label" id="qqLabel">QQ 号</span>
           <strong class="qq-number" id="qqNumberText">—</strong>
-          <button class="btn btn-text btn-sm" id="copyQqBtn" title="复制 QQ 号">
+          <button class="btn btn-text btn-sm" id="copyQqBtn" title="复制号码">
             <i class="bi bi-clipboard"></i>
           </button>
         </div>
