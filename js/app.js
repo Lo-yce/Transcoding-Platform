@@ -1382,13 +1382,15 @@
       var placeholder = $('qqImgPlaceholder');
       var expectedPath = isQQ ? 'assets/qq/qq-qrcode.jpg' : 'assets/qq/wechat-qrcode.jpg';
 
-      // 更新占位提示文字（直接查询元素，不依赖缓存的变量）
+      // 无论 placeholder 是否显示，都更新 hint 文字
       function updateHintText() {
         if (placeholder) {
           var hint = placeholder.querySelector('small');
           if (hint) hint.textContent = expectedPath;
         }
       }
+      // 立即更新
+      updateHintText();
 
       if (imgEl) {
         // 设置 handler
@@ -1402,6 +1404,8 @@
         imgEl.onload = function () {
           imgEl.classList.remove('hidden');
           if (placeholder) placeholder.classList.add('hidden');
+          // 图片加载成功后也更新 hint（下次切换时文字已正确）
+          updateHintText();
         };
 
         if (img) {
