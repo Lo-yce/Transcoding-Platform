@@ -1380,17 +1380,23 @@
       // 更新图片
       var imgEl = $('qqImg');
       var placeholder = $('qqImgPlaceholder');
-      var hint = $('qqImgHint');
       var expectedPath = isQQ ? 'assets/qq/qq-qrcode.jpg' : 'assets/qq/wechat-qrcode.jpg';
 
+      // 更新占位提示文字（直接查询元素，不依赖缓存的变量）
+      function updateHintText() {
+        if (placeholder) {
+          var hint = placeholder.querySelector('small');
+          if (hint) hint.textContent = expectedPath;
+        }
+      }
+
       if (imgEl) {
-        // onerror 动态设置，以便根据当前模式显示正确的提示路径
+        // 设置 handler
         imgEl.onerror = function () {
           imgEl.classList.add('hidden');
           if (placeholder) {
             placeholder.classList.remove('hidden');
-            var hintSmall = placeholder.querySelector('small');
-            if (hintSmall) hintSmall.textContent = expectedPath;
+            updateHintText();
           }
         };
         imgEl.onload = function () {
@@ -1399,13 +1405,15 @@
         };
 
         if (img) {
+          // 先清空 src 打破缓存，再设新值
+          imgEl.src = '';
           imgEl.src = img;
         } else {
+          imgEl.src = '';
           imgEl.classList.add('hidden');
           if (placeholder) {
             placeholder.classList.remove('hidden');
-            var hintSmall = placeholder.querySelector('small');
-            if (hintSmall) hintSmall.textContent = expectedPath;
+            updateHintText();
           }
         }
       }
