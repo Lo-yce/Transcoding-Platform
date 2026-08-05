@@ -24,7 +24,7 @@ window.QQ_CONFIG = {
 
   // 微信二维码图片路径
   // 把你的微信二维码图片命名为 wechat-qrcode.jpg 放入 assets/qq/ 文件夹
-  wechatImage: 'assets/qq/wechat-qrcode.jpg',
+  wechatImage: 'assets/qq/wechat-qrcode.png',
 
   // 微信二维码下方提示文字
   wechatNote: '扫码加我微信好友',
