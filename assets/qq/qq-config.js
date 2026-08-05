@@ -20,7 +20,7 @@ window.QQ_CONFIG = {
 
   // ===== 微信配置 =====
   // 【必填】你的微信号（请把下面字符串替换为你的真实微信号）
-  wechatNumber: '',
+  wechatNumber: 'F18882612195',
 
   // 微信二维码图片路径
   // 把你的微信二维码图片命名为 wechat-qrcode.jpg 放入 assets/qq/ 文件夹
